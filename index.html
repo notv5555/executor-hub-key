@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ดาวน์โหลดไฟล์ - ระบบปลดล็อก</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #050505;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        .font-rajdhani {
+            font-family: 'Rajdhani', sans-serif;
+            letter-spacing: 2px;
+        }
+        
+        /* เพิ่มตารางพื้นหลังให้ดูมีมิติและไม่โล่ง */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+        }
+
+        /* เอฟเฟกต์พื้นหลัง (วงแสง) */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+        .orb-1 {
+            width: 300px; height: 300px;
+            background: rgba(59, 130, 246, 0.25);
+            top: 10%; left: 10%;
+        }
+        .orb-2 {
+            width: 400px; height: 400px;
+            background: rgba(139, 92, 246, 0.15);
+            bottom: 10%; right: 10%;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 50px) scale(1.1); }
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(15, 15, 20, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+        
+        .glow-border {
+            position: relative;
+        }
+        .glow-border::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px; right: -1px; bottom: -1px;
+            border-radius: inherit;
+            background: linear-gradient(45deg, rgba(59,130,246,0.5), rgba(168,85,247,0.5));
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .glow-border.success::before {
+            background: linear-gradient(45deg, rgba(16,185,129,0.5), rgba(52,211,153,0.5));
+            opacity: 1;
+        }
+
+        .animate-pulse-slow {
+            animation: pulse-glow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(244, 63, 94, 0.4)); opacity: 1; }
+            50% { filter: drop-shadow(0 0 25px rgba(244, 63, 94, 0.8)); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 relative">
+
+    <!-- เอฟเฟกต์แสงและตารางพื้นหลัง -->
+    <div class="bg-grid"></div>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+
+    <!-- คอนเทนเนอร์หลักที่ถูกจัดกลุ่มไว้ด้วยกัน -->
+    <div class="w-full max-w-md flex flex-col items-center z-10">
+        
+        <div id="main-card" class="glass-panel glow-border w-full rounded-[2rem] p-8 text-center transition-all duration-700">
+            
+            <!-- Badge สถานะระบบ (เพิ่มเข้ามาเพื่อไม่ให้ดูโล่ง) -->
+            <div class="flex justify-center gap-3 mb-6">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    System Online
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    Secured
+                </span>
+            </div>
+
+            <!-- ส่วนหัว -->
+            <h1 class="font-rajdhani text-4xl font-bold mb-1 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-wider">
+                EXECUTOR HUB
+            </h1>
+            <p class="text-slate-400 text-sm mb-8 font-light">กรุณายืนยันตัวตนด้วยคีย์เพื่อเข้าถึงฐานข้อมูล</p>
+
+            <!-- ไอคอนแสดงสถานะ -->
+            <div id="icon-container" class="flex justify-center mb-8 relative">
+                <svg id="lock-icon" class="w-24 h-24 text-rose-500 animate-pulse-slow transition-all duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                
+                <svg id="unlock-icon" class="w-24 h-24 text-emerald-400 hidden transition-all duration-500 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+
+            <!-- ส่วนฟอร์มใส่คีย์ -->
+            <div id="input-section" class="space-y-5">
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                    </div>
+                    <input type="text" id="key-input" placeholder="วางคีย์ของคุณที่นี่..." 
+                        class="w-full pl-11 pr-4 py-3.5 bg-black/40 border border-slate-700/50 rounded-xl focus:outline-none focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/80 text-white text-md transition-all placeholder:text-slate-600 shadow-inner tracking-wide">
+                </div>
+                
+                <!-- ข้อความแจ้งเตือน (ซ่อนไว้) -->
+                <div id="error-message" class="hidden text-rose-400 text-sm font-medium bg-rose-500/10 border border-rose-500/20 py-2.5 rounded-lg">
+                    ❌ คีย์ไม่ถูกต้อง! หรือหมดอายุการใช้งาน
+                </div>
+                
+                <button id="verify-btn" 
+                    class="relative w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium py-3.5 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)] flex justify-center items-center gap-2 overflow-hidden">
+                    
+                    <span id="btn-text" class="flex items-center gap-2">
+                        ตรวจสอบคีย์ปลดล็อก
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </span>
+
+                    <div id="btn-loading" class="hidden flex items-center gap-3">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>กำลังตรวจสอบข้อมูลเซิร์ฟเวอร์...</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- ส่วนปุ่มดาวน์โหลด (แสดงเมื่อปลดล็อกสำเร็จ) -->
+            <div id="download-section" class="hidden space-y-5">
+                <div class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-3.5 rounded-xl text-sm font-medium">
+                    ✨ ยืนยันตัวตนสำเร็จ! ระบบปลดล็อกไฟล์ให้คุณแล้ว
+                </div>
+                
+                <!-- 🔴 แก้ไขลิงก์ดาวน์โหลดหลัก ตรง href="..." 🔴 -->
+                <a href="https://c8646cfef541ce7a451ebd88b9074efb.r2.cloudflarestorage.com/filerift/2bb2ddcd-a3df-47f3-803a-e68f3737eebd---Madium.zip?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=43cf367050590a138cc183e7557ba614%2F20260505%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260505T075742Z&X-Amz-Expires=6000&X-Amz-Signature=04baf5d985feced096682e2fedcf5b8fc0a8e2953f09449aa20a7f8c3a5368b8&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3D%22Madium.zip%22&x-amz-checksum-mode=ENABLED&x-id=GetObject" target="_blank" 
+                    class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-medium py-4 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] flex justify-center items-center gap-2 transform hover:-translate-y-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    ดาวน์โหลดตัวรัน EXECUTOR
+                </a>
+
+                <!-- 🟢 ถ้าอยากเพิ่มปุ่มดาวน์โหลดอีกอัน (เช่น ลิงก์สำรอง) ให้แก้ลิงก์ตรงนี้ครับ 🟢 -->
+                <a href="ใส่ลิงก์สำรองตรงนี้ครับ" target="_blank" 
+                    class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-3 px-4 rounded-xl transition-all border border-slate-700 hover:border-slate-500 flex justify-center items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                    ดาวน์โหลดลิงก์สำรอง (Backup)
+                </a>
+            </div>
+
+        </div>
+
+        <!-- ส่วน Footer ด้านล่างสุด -->
+        <div class="mt-8 text-center">
+            <p class="font-rajdhani text-slate-500 text-xs tracking-[0.2em]">
+                &copy; 2026 EXECUTOR HUB. PROTECTED BY ENCRYPTION.
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔴 ตั้งค่า URL ของ Google Apps Script ที่นี่ 🔴
+        // ==========================================
+        const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbyYCHoUjHPbYigHtn7Tw2yCh-QxGIBBdwniQpfDZm7iQk1-CnF9VuKaXToSCsPZNxQ4lA/exec'; 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const keyInput = document.getElementById('key-input');
+            const verifyBtn = document.getElementById('verify-btn');
+            const errorMessage = document.getElementById('error-message');
+            
+            const btnText = document.getElementById('btn-text');
+            const btnLoading = document.getElementById('btn-loading');
+
+            const lockIcon = document.getElementById('lock-icon');
+            const unlockIcon = document.getElementById('unlock-icon');
+            
+            const inputSection = document.getElementById('input-section');
+            const downloadSection = document.getElementById('download-section');
+            const mainCard = document.getElementById('main-card');
+
+            const REQUIRED_KEYWORD = "WARNING";
+
+            // ฟังก์ชันส่งข้อมูลไป Google Sheets
+            function sendDataToSheet(key, status) {
+                if (!GOOGLE_SHEET_URL || GOOGLE_SHEET_URL.includes('ใส่_URL')) {
+                    console.log("ยังไม่ได้ตั้งค่า Google Sheet URL");
+                    return; // ถ้ายังไม่ตั้งค่าให้ข้ามไป
+                }
+
+                const formData = new FormData();
+                formData.append('key', key);
+                formData.append('status', status);
+
+                // ส่งแบบ no-cors ป้องกันปัญหา Cross-Origin จากเบราว์เซอร์
+                fetch(GOOGLE_SHEET_URL, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors' 
+                }).then(() => {
+                    console.log("ส่งข้อมูลไป Google Sheet สำเร็จ!");
+                }).catch(err => {
+                    console.error("เกิดข้อผิดพลาดในการส่งข้อมูล", err);
+                });
+            }
+
+            verifyBtn.addEventListener('click', () => {
+                const userKey = keyInput.value.trim();
+                
+                if (userKey === '') {
+                    showError();
+                    return;
+                }
+
+                errorMessage.classList.add('hidden');
+                keyInput.disabled = true;
+                verifyBtn.disabled = true;
+                verifyBtn.classList.add('cursor-not-allowed', 'opacity-90');
+                
+                btnText.classList.add('hidden');
+                btnLoading.classList.remove('hidden');
+                btnLoading.classList.add('flex');
+
+                const delayMs = Math.floor(Math.random() * 2000) + 3000;
+
+                setTimeout(() => {
+                    keyInput.disabled = false;
+                    verifyBtn.disabled = false;
+                    verifyBtn.classList.remove('cursor-not-allowed', 'opacity-90');
+                    btnText.classList.remove('hidden');
+                    btnLoading.classList.add('hidden');
+                    btnLoading.classList.remove('flex');
+
+                    // ตรวจสอบคีย์
+                    if (userKey.includes(REQUIRED_KEYWORD)) {
+                        showSuccess();
+                        // ส่งข้อมูลลง Sheet เมื่อ "ผ่าน"
+                        sendDataToSheet(userKey, "✅ ปลดล็อกสำเร็จ"); 
+                    } else {
+                        showError();
+                        // ส่งข้อมูลลง Sheet เมื่อ "ไม่ผ่าน" (ถ้าต้องการเก็บประวัติการเดามั่ว)
+                        sendDataToSheet(userKey, "❌ ใส่คีย์ผิด");
+                    }
+                }, delayMs);
+            });
+
+            function showSuccess() {
+                inputSection.classList.add('hidden');
+                downloadSection.classList.remove('hidden');
+                
+                lockIcon.classList.add('hidden');
+                unlockIcon.classList.remove('hidden');
+
+                mainCard.classList.add('success');
+            }
+
+            function showError() {
+                errorMessage.classList.remove('hidden');
+                
+                mainCard.style.transform = 'translateX(5px)';
+                setTimeout(() => mainCard.style.transform = 'translateX(-5px)', 100);
+                setTimeout(() => mainCard.style.transform = 'translateX(5px)', 200);
+                setTimeout(() => mainCard.style.transform = 'translateX(0)', 300);
+                
+                keyInput.classList.add('border-rose-500');
+                setTimeout(() => keyInput.classList.remove('border-rose-500'), 2000);
+            }
+
+            keyInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    verifyBtn.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
